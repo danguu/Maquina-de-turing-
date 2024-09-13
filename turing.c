@@ -2,7 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define TAPE_SIZE 100 // Define el tamaño de la cinta
+#define TAPE_SIZE 100  
+// Define el tamaño de la cinta
 
 // Estructura para la máquina de Turing
 typedef struct {
