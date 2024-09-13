@@ -1,196 +1,149 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
-#define TAPE_SIZE 100  
-// Define el tamaño de la cinta
+#define TAPE_SIZE 100 // Define el tamaño de la cinta de la máquina de Turing
 
 // Estructura para la máquina de Turing
-typedef struct {
-    char cinta[TAPE_SIZE]; // La cinta de la máquina de Turing
-    int puntero;           // La posición actual del puntero en la cinta
-} MaquinaDeTuring;
+struct MaquinaDeTuring {
+    char cinta[TAPE_SIZE]; // Cinta de la máquina de Turing
+    int puntero;           // Posición actual del puntero en la cinta
+};
 
 // Inicializa la máquina de Turing
-void inicializar_maquina(MaquinaDeTuring *maquina) {
-    memset(maquina->cinta, '0', TAPE_SIZE); // Inicializa la cinta con ceros
+void inicializar_maquina(struct MaquinaDeTuring* maquina) {
+    memset(maquina->cinta, '0', TAPE_SIZE); // Llena la cinta con ceros
     maquina->puntero = TAPE_SIZE / 2;        // Coloca el puntero en el centro de la cinta
 }
 
-// Mueve el puntero de la máquina de Turing en la dirección indicada
-void mover_puntero(MaquinaDeTuring *maquina, char direccion) {
-    if (direccion == 'D') { // Mover hacia la derecha
-        if (maquina->puntero < TAPE_SIZE - 1) { // Asegúrate de no salir del límite derecho
-            maquina->puntero++;
-            printf("Moviendo puntero a la derecha. Nueva posición: %d\n", maquina->puntero);
-        }
-    } else if (direccion == 'I') { // Mover hacia la izquierda
-        if (maquina->puntero > 0) { // Asegúrate de no salir del límite izquierdo
-            maquina->puntero--;
-            printf("Moviendo puntero a la izquierda. Nueva posición: %d\n", maquina->puntero);
-        }
+// Mueve el puntero de la máquina de Turing
+void mover_puntero(struct MaquinaDeTuring* maquina, char direccion) {
+    if (direccion == 'D') { // Si la dirección es 'D' (derecha)
+        maquina->puntero = (maquina->puntero + 1) % TAPE_SIZE; // Mueve el puntero a la derecha, con envolvimiento circular
+    } else if (direccion == 'I') { // Si la dirección es 'I' (izquierda)
+        maquina->puntero = (maquina->puntero - 1 + TAPE_SIZE) % TAPE_SIZE; // Mueve el puntero a la izquierda, con envolvimiento circular
     }
-    imprimir_cinta(maquina); // Imprime el estado actual de la cinta
 }
 
-// Lee el valor en la posición actual del puntero en la cinta
-char leer_cinta(MaquinaDeTuring *maquina) {
-    return maquina->cinta[maquina->puntero];
+// Lee el valor en la posición actual del puntero
+char leer_cinta(struct MaquinaDeTuring* maquina) {
+    return maquina->cinta[maquina->puntero]; // Devuelve el valor en la posición actual del puntero
 }
 
-// Escribe un valor en la posición actual del puntero en la cinta
-void escribir_cinta(MaquinaDeTuring *maquina, char valor) {
-    maquina->cinta[maquina->puntero] = valor;
+// Escribe un valor en la cinta en la posición actual del puntero
+void escribir_cinta(struct MaquinaDeTuring* maquina, char valor) {
+    maquina->cinta[maquina->puntero] = valor; // Establece el valor en la posición actual del puntero
 }
 
-// Imprime el estado de la cinta con el puntero indicado
-void imprimir_cinta(MaquinaDeTuring *maquina) {
+// Imprime la cinta con el puntero resaltado
+void imprimir_cinta(struct MaquinaDeTuring* maquina) {
     for (int i = 0; i < TAPE_SIZE; i++) {
-        if (i == maquina->puntero) { // Imprime una barra vertical en la posición del puntero
-            printf("|");
+        if (i == maquina->puntero) {
+            printf("[%c]", maquina->cinta[i]); // Resalta la posición del puntero con corchetes
+        } else {
+            printf("%c", maquina->cinta[i]); // Imprime el contenido de la cinta
         }
-        printf("%c", maquina->cinta[i]); // Imprime el contenido de la cinta
     }
-    printf("\n");
+    printf("\n"); // Nueva línea al final de la impresión de la cinta
 }
 
 // Convierte una cadena binaria a un número decimal
-int binario_a_decimal(const char *binario) {
-    int decimal = 0;
-    int base = 1;
-    int longitud = strlen(binario);
-    for (int i = longitud - 1; i >= 0; i--) {
-        if (binario[i] == '1') { // Si el bit es 1, suma la base al decimal
-            decimal += base;
-        }
-        base *= 2; // Incrementa la base (potencia de 2)
-    }
-    return decimal;
+int binario_a_decimal(char* binario) {
+    return (int)strtol(binario, NULL, 2); // Usa strtol para convertir de binario a decimal
 }
 
 // Convierte un número decimal a una cadena binaria
-void decimal_a_binario(int decimal, char *binario) {
+void decimal_a_binario(int decimal, char* resultado) {
     int index = 0;
-    if (decimal == 0) { // Caso especial para 0
-        binario[index++] = '0';
-    } else {
-        while (decimal > 0) { // Convierte el número decimal a binario
-            binario[index++] = (decimal % 2) + '0'; // Añade el bit menos significativo
-            decimal /= 2; // Divide el número decimal por 2
-        }
+    if (decimal == 0) {
+        strcpy(resultado, "0"); // Caso especial para el valor 0
+        return;
     }
-    binario[index] = '\0'; // Finaliza la cadena binaria
+    while (decimal > 0) { // Convierte el número decimal a binario
+        resultado[index++] = (decimal % 2) + '0'; // Añade el bit menos significativo
+        decimal /= 2; // Divide el número decimal por 2
+    }
+    resultado[index] = '\0'; // Termina la cadena binaria
     // Invierte la cadena binaria
     for (int i = 0; i < index / 2; i++) {
-        char temp = binario[i];
-        binario[i] = binario[index - 1 - i];
-        binario[index - 1 - i] = temp;
+        char temp = resultado[i];
+        resultado[i] = resultado[index - i - 1];
+        resultado[index - i - 1] = temp;
     }
 }
 
-// Suma dos cadenas binarias y guarda el resultado
-void sumar_binario(const char *a, const char *b, char *resultado) {
-    int carry = 0;
-    int i = strlen(a) - 1;
-    int j = strlen(b) - 1;
-    int k = 0;
-
-    while (i >= 0 || j >= 0 || carry) { // Mientras haya bits o acarreo
-        int suma = carry;
-        if (i >= 0) suma += a[i--] - '0'; // Suma el bit de a y el acarreo
-        if (j >= 0) suma += b[j--] - '0'; // Suma el bit de b
-        resultado[k++] = (suma % 2) + '0'; // Guarda el bit resultante
-        carry = suma / 2; // Calcula el nuevo acarreo
-    }
-    resultado[k] = '\0'; // Finaliza la cadena de resultado
-    // Invierte el resultado
-    for (int m = 0; m < k / 2; m++) {
-        char temp = resultado[m];
-        resultado[m] = resultado[k - 1 - m];
-        resultado[k - 1 - m] = temp;
-    }
+// Suma dos números binarios (como cadenas)
+void sumar_binario(char* a, char* b, char* resultado) {
+    int num_a = binario_a_decimal(a); // Convierte el primer número binario a decimal
+    int num_b = binario_a_decimal(b); // Convierte el segundo número binario a decimal
+    int suma = num_a + num_b; // Suma los dos números decimales
+    decimal_a_binario(suma, resultado); // Convierte el resultado de la suma a binario
 }
 
-// Resta dos cadenas binarias y guarda el resultado
-void restar_binario(const char *a, const char *b, char *resultado) {
-    int borrow = 0;
-    int i = strlen(a) - 1;
-    int j = strlen(b) - 1;
-    int k = 0;
-
-    while (i >= 0 || j >= 0) { // Mientras haya bits en a o b
-        int resta = (a[i] - '0') - borrow;
-        if (j >= 0) resta -= (b[j] - '0'); // Resta el bit de b
-        if (resta < 0) { // Maneja el préstamo
-            resta += 2;
-            borrow = 1;
-        } else {
-            borrow = 0;
-        }
-        resultado[k++] = resta + '0'; // Guarda el bit resultante
-        i--;
-        j--;
-    }
-    resultado[k] = '\0'; // Finaliza la cadena de resultado
-    // Invierte el resultado
-    for (int m = 0; m < k / 2; m++) {
-        char temp = resultado[m];
-        resultado[m] = resultado[k - 1 - m];
-        resultado[k - 1 - m] = temp;
-    }
-    // Elimina los ceros a la izquierda
-    int start = 0;
-    while (resultado[start] == '0' && start < k - 1) {
-        start++;
-    }
-    memmove(resultado, resultado + start, k - start + 1);
+// Resta dos números binarios (como cadenas)
+void restar_binario(char* a, char* b, char* resultado) {
+    int num_a = binario_a_decimal(a); // Convierte el primer número binario a decimal
+    int num_b = binario_a_decimal(b); // Convierte el segundo número binario a decimal
+    int resta = num_a - num_b; // Resta el segundo número del primero
+    decimal_a_binario(resta, resultado); // Convierte el resultado de la resta a binario
 }
 
+// Función para mostrar el movimiento del puntero
+void mostrar_movimiento(struct MaquinaDeTuring* maquina, char direccion) {
+    printf("Moviendo el puntero hacia la %s\n", direccion == 'D' ? "derecha" : "izquierda"); // Muestra la dirección del movimiento
+    mover_puntero(maquina, direccion); // Mueve el puntero
+    imprimir_cinta(maquina); // Imprime la cinta después del movimiento
+}
+
+// Función principal
 int main() {
-    MaquinaDeTuring maquina; // Declara una instancia de MaquinaDeTuring
-    inicializar_maquina(&maquina); // Inicializa la máquina de Turing
+    struct MaquinaDeTuring turing; // Declara una instancia de la máquina de Turing
+    inicializar_maquina(&turing); // Inicializa la máquina de Turing
 
-    char binary1[TAPE_SIZE], binary2[TAPE_SIZE];
-    char resultado[TAPE_SIZE];
-    int decimalResult;
+    char binary1[50], binary2[50]; // Arrays para almacenar los números binarios
 
-    // Leer el primer número binario
+    // Leer dos números binarios del usuario
     printf("Ingresa el primer número binario: ");
     scanf("%s", binary1);
-
-    // Leer el segundo número binario
     printf("Ingresa el segundo número binario: ");
     scanf("%s", binary2);
 
-    // Colocar el primer número binario en la cinta
+    // Coloca el primer número binario en la cinta
     for (int i = 0; i < strlen(binary1); i++) {
-        escribir_cinta(&maquina, binary1[i]);
-        mover_puntero(&maquina, 'D'); // Mueve el puntero a la derecha
+        escribir_cinta(&turing, binary1[i]); // Escribe cada bit del primer número en la cinta
+        mostrar_movimiento(&turing, 'D'); // Mueve el puntero a la derecha
     }
-    mover_puntero(&maquina, 'I' * strlen(binary1));  // Mueve el puntero de vuelta al inicio
 
-    // Separador para el segundo número
-    escribir_cinta(&maquina, ' ');
-    mover_puntero(&maquina, 'D'); // Mueve el puntero a la derecha
+    printf("Cinta después de colocar el primer número binario:\n");
+    imprimir_cinta(&turing); // Imprime la cinta después de colocar el primer número binario
 
-    // Colocar el segundo número binario en la cinta
+    // Coloca un separador en la cinta
+    escribir_cinta(&turing, ' '); // Escribe un espacio como separador
+    mostrar_movimiento(&turing, 'D'); // Mueve el puntero a la derecha
+
+    // Coloca el segundo número binario en la cinta
     for (int i = 0; i < strlen(binary2); i++) {
-        escribir_cinta(&maquina, binary2[i]);
-        mover_puntero(&maquina, 'D'); // Mueve el puntero a la derecha
+        escribir_cinta(&turing, binary2[i]); // Escribe cada bit del segundo número en la cinta
+        mostrar_movimiento(&turing, 'D'); // Mueve el puntero a la derecha
     }
-    mover_puntero(&maquina, 'I' * (strlen(binary2) + 1));  // Mueve el puntero de vuelta al inicio
 
-    // Realizar suma
-    sumar_binario(binary1, binary2, resultado);
-    printf("Resultado de la suma en binario: %s\n", resultado);
-    decimalResult = binario_a_decimal(resultado);
-    printf("Resultado de la suma en decimal: %d\n", decimalResult);
+    printf("Cinta después de colocar el segundo número binario:\n");
+    imprimir_cinta(&turing); // Imprime la cinta después de colocar el segundo número binario
 
-    // Realizar resta
-    restar_binario(binary1, binary2, resultado);
-    printf("Resultado de la resta en binario: %s\n", resultado);
-    decimalResult = binario_a_decimal(resultado);
-    printf("Resultado de la resta en decimal: %d\n", decimalResult);
+    // Realiza la suma
+    char resultado_suma[50];
+    sumar_binario(binary1, binary2, resultado_suma); // Suma los dos números binarios
+    printf("Resultado de la suma en binario: %s\n", resultado_suma);
+    printf("Resultado de la suma en decimal: %d\n", binario_a_decimal(resultado_suma)); // Muestra el resultado de la suma en decimal
 
-    return 0;
+    // Realiza la resta
+    char resultado_resta[50];
+    restar_binario(binary1, binary2, resultado_resta); // Resta el segundo número del primero
+    printf("Resultado de la resta en binario: %s\n", resultado_resta);
+    printf("Resultado de la resta en decimal: %d\n", binario_a_decimal(resultado_resta)); // Muestra el resultado de la resta en decimal
+
+    printf("Cinta final después de la suma y resta:\n");
+    imprimir_cinta(&turing); // Imprime la cinta final después de realizar la suma y la resta
+
+    return 0; // Fin del programa
 }
