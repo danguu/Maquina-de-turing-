@@ -1,94 +1,126 @@
-# Definir tamaño de la cinta
+# Definimos el tamaño de la cinta
 TAPE_SIZE = 100
 
-# Función para verificar si una cadena es un número binario válido
-def es_binario_valido(binario):
-    for char in binario:
-        if char != '0' and char != '1':
-            return False  # No es un número binario válido
-    return True
+class MaquinaDeTuring:
+    def __init__(self):
+        # Inicializa la cinta con ceros y coloca el puntero en el centro de la cinta
+        self.cinta = ['0'] * TAPE_SIZE
+        self.puntero = TAPE_SIZE // 2
+    
+    def mover_puntero(self, direccion):
+        # Mueve el puntero en la dirección especificada
+        # 'D' para derecha, 'I' para izquierda
+        if direccion == 'D':
+            self.puntero = min(self.puntero + 1, TAPE_SIZE - 1)  # Mueve a la derecha, sin exceder el tamaño de la cinta
+        elif direccion == 'I':
+            self.puntero = max(self.puntero - 1, 0)  # Mueve a la izquierda, sin ir por debajo del índice 0
+    
+    def leer_cinta(self):
+        # Lee el valor actual en la posición del puntero
+        return self.cinta[self.puntero]
+    
+    def escribir_cinta(self, valor):
+        # Escribe un valor en la posición actual del puntero
+        self.cinta[self.puntero] = valor
+    
+    def imprimir_cinta(self):
+        # Imprime la cinta con el puntero resaltado
+        cinta_mostrada = ''.join(self.cinta)
+        print(cinta_mostrada[:self.puntero] + '[' + self.cinta[self.puntero] + ']' + cinta_mostrada[self.puntero + 1:])
+    
+    def mostrar_movimiento(self, direccion):
+        # Muestra la dirección del movimiento y actualiza la posición del puntero
+        print(f"Moviendo el puntero hacia la {'derecha' if direccion == 'D' else 'izquierda'}")
+        self.mover_puntero(direccion)
+        self.imprimir_cinta()
 
-# Función para convertir binario a decimal
 def binario_a_decimal(binario):
-    decimal = 0
-    base = 1  # 2^0
-    for bit in reversed(binario):
-        if bit == '1':
-            decimal += base
-        base *= 2  # Incrementar la base
-    return decimal
+    # Convierte un número binario (como cadena) a decimal
+    return int(binario, 2)
 
-# Función para convertir decimal a binario
 def decimal_a_binario(decimal):
-    if decimal == 0:
-        return '0'
-    binario = ''
-    while decimal > 0:
-        binario = str(decimal % 2) + binario
-        decimal //= 2
-    return binario
+    # Convierte un número decimal a binario (como cadena)
+    return bin(decimal)[2:]
 
-# Función para sumar dos números binarios
 def sumar_binario(a, b):
-    resultado = ''
+    # Suma dos números binarios (como cadenas)
+    max_len = max(len(a), len(b))
+    a = a.zfill(max_len)  # Rellena con ceros a la izquierda para igualar longitudes
+    b = b.zfill(max_len)
     carry = 0
-    i, j = len(a) - 1, len(b) - 1
-    while i >= 0 or j >= 0 or carry:
-        suma = carry
-        if i >= 0:
-            suma += int(a[i])
-            i -= 1
-        if j >= 0:
-            suma += int(b[j])
-            j -= 1
-        resultado = str(suma % 2) + resultado  # Guardar el bit menos significativo
-        carry = suma // 2  # Calcular el nuevo carry
-    return resultado
+    resultado = []
+    # Suma bit a bit desde el final de las cadenas
+    for i in range(max_len - 1, -1, -1):
+        suma = int(a[i]) + int(b[i]) + carry
+        resultado.append(str(suma % 2))
+        carry = suma // 2
+    if carry:
+        resultado.append('1')
+    return ''.join(resultado[::-1])  # Invierte el resultado para obtener el binario correcto
 
-# Función para restar dos números binarios
 def restar_binario(a, b):
-    resultado = ''
+    # Resta dos números binarios (como cadenas)
+    max_len = max(len(a), len(b))
+    a = a.zfill(max_len)  # Rellena con ceros a la izquierda para igualar longitudes
+    b = b.zfill(max_len)
     borrow = 0
-    i, j = len(a) - 1, len(b) - 1
-    while i >= 0 or j >= 0:
-        resta = int(a[i]) - borrow if i >= 0 else -borrow
-        if j >= 0:
-            resta -= int(b[j])
+    resultado = []
+    # Resta bit a bit desde el final de las cadenas
+    for i in range(max_len - 1, -1, -1):
+        resta = int(a[i]) - int(b[i]) - borrow
         if resta < 0:
             resta += 2
             borrow = 1
         else:
             borrow = 0
-        resultado = str(resta) + resultado
-        i -= 1
-        j -= 1
+        resultado.append(str(resta))
+    return ''.join(resultado[::-1]).lstrip('0') or '0'  # Invierte el resultado y elimina ceros a la izquierda
 
-    # Eliminar ceros a la izquierda
-    return resultado.lstrip('0') or '0'
-
-# Función principal
 def main():
-    binary1 = input("Ingresa el primer número binario: ")
-    if not es_binario_valido(binary1):
-        print("Error: Entrada no válida, solo se permiten números binarios.")
-        return
-
-    binary2 = input("Ingresa el segundo número binario: ")
-    if not es_binario_valido(binary2):
-        print("Error: Entrada no válida, solo se permiten números binarios.")
-        return
-
-    # Sumar
+    turing = MaquinaDeTuring()  # Crea una instancia de la máquina de Turing
+    
+    def leer_binario(prompt):
+        # Lee una entrada binaria del usuario y valida que sea correcta
+        binario = input(prompt)
+        if not all(bit in '01' for bit in binario):
+            print("Error: Entrada no válida, solo se permiten números binarios.")
+            exit()
+        return binario
+    
+    # Lee dos números binarios del usuario
+    binary1 = leer_binario("Ingresa el primer número binario: ")
+    binary2 = leer_binario("Ingresa el segundo número binario: ")
+    
+    # Coloca el primer número binario en la cinta y mueve el puntero
+    for bit in binary1:
+        turing.escribir_cinta(bit)
+        turing.mostrar_movimiento('D')  # Mueve el puntero a la derecha
+    turing.mover_puntero('I' * len(binary1))  # Mueve el puntero de vuelta al inicio
+    print("Cinta después de colocar el primer número binario:")
+    turing.imprimir_cinta()
+    
+    # Coloca un separador en la cinta y mueve el puntero
+    turing.escribir_cinta(' ')
+    turing.mostrar_movimiento('D')
+    # Coloca el segundo número binario en la cinta y mueve el puntero
+    for bit in binary2:
+        turing.escribir_cinta(bit)
+        turing.mostrar_movimiento('D')  # Mueve el puntero a la derecha
+    turing.mover_puntero('I' * (len(binary2) + 1))  # Mueve el puntero de vuelta al inicio
+    print("Cinta después de colocar el segundo número binario:")
+    turing.imprimir_cinta()
+    
+    # Calcula y muestra el resultado de la suma
     suma_binaria = sumar_binario(binary1, binary2)
     print(f"Resultado de la suma en binario: {suma_binaria}")
-    suma_decimal = binario_a_decimal(suma_binaria)
-    print(f"Resultado de la suma en decimal: {suma_decimal}")
-
-    # Restar
+    print(f"Resultado de la suma en decimal: {binario_a_decimal(suma_binaria)}")
+    
+    # Mueve el puntero a la derecha y calcula el resultado de la resta
+    turing.mover_puntero('D')
     resta_binaria = restar_binario(binary1, binary2)
     print(f"Resultado de la resta en binario: {resta_binaria}")
-    resta_decimal = binario_a_decimal(resta_binaria)
-    print(f"Resultado de la resta en decimal: {resta_decimal}")
+    print(f"Resultado de la resta en decimal: {binario_a_decimal(resta_binaria)}")
 
 if __name__ == "__main__":
-    main()
+    main()  # Ejecuta la función principal
+
